@@ -42,6 +42,47 @@ char Rc522Request(unsigned char reg,unsigned char *type);
 char Rc522Anticoll(unsigned char *pSnr);
 
 /**
+ *@brief 选定卡片
+ *@param pSnr:卡片序列号，4字节
+ *@reutrn 成功：MI_OK
+ */
+char Rc522Select(unsigned char *pSnr);
+
+/**
+ *@brief 验证卡片密码
+ *@param auto_mode:密码验证模式  0x60 = 验证A密钥
+ *								 0x61 = 验证B密钥
+ *		 addr:地址块
+ *		 pKey:密码
+ *		 pSnr:卡片序列号，4字节
+ *@return 成功：MI_OK
+ */
+char Rc522AuthState(unsigned char auto_mode,unsigned char addr,unsigned char *pKey,unsigned char *pSnr);
+
+/**
+ *@brief 读取卡一块的数据
+ *@param addr:块地址
+ *       p:读出的数据,16字节
+ *@return 成功：MI_OK
+ */
+char Rc522ReadBlock(unsigned char addr ,unsigned char *p);
+
+
+/**
+ *@brief 写数据到卡的一块
+ *@param addr:块地址
+ *       p:写入的数据,16字节
+ *@return 成功：MI_OK
+ */
+char Rc522WriteBlock(unsigned char addr ,unsigned char *p);
+
+/**
+ *@brief 命令卡片进入休眠状态
+ *@return 成功：MI_OK
+ */
+char Rc522Halt(void);
+
+/**
  *@brief 关闭RC522设备
  */
 void Rc522CloseDev(void);

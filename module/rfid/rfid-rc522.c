@@ -8,6 +8,7 @@
  * @note     
  */
 
+#include <string.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -315,6 +316,190 @@ char Rc522Anticoll(unsigned char *pSnr)
 	RC522SetBitMask(CollReg,0x80);
 	
 	return status;
+}
+
+/**
+ *@brief 用于MF522计算CRC16
+ *@param pIn:计算数据  len：数据长度  pOut:计算之后的数据
+ */
+static void CalulateCRC(unsigned char *pIn,unsigned char len,unsigned char *pOut)
+{
+	unsigned char i,n;
+
+	RC522ClearBitMask(DivIrqReg,0x04);
+	RC522Write(CommandReg,PCD_IDLE);
+	RC522SetBitMask(FIFOLevelReg,0x80);
+
+	for(i = 0;i < len;i++)
+	{
+		RC522Write(FIFODataReg,*(pIn + i));
+	}
+	RC522Write(CommandReg,PCD_CALCCRC);
+	i = 0xFF;
+	do
+	{
+		n = RC522Read(DivIrqReg);
+		i--;
+	}while((i != 0) && !(n&0x04));
+	
+	pOut[0] = RC522Read(CRCResultRegL);
+	pOut[1] = RC522Read(CRCResultRegM);
+}
+
+/**
+ *@brief 选定卡片
+ *@param pSnr:卡片序列号，4字节
+ *@reutrn 成功：MI_OK
+ */
+char Rc522Select(unsigned char *pSnr)
+{
+	char status;
+	unsigned char i;
+	unsigned int unLen;
+	unsigned char ucComMF522Buf[MAXRLEN];
+
+	ucComMF522Buf[0] = PICC_ANTICOLL1;
+	ucComMF522Buf[1] = 0x70;
+	ucComMF522Buf[6] = 0;
+
+	for(i = 0;i < 4;i++)
+	{
+		ucComMF522Buf[i+2] = *(pSnr+i);
+		ucComMF522Buf[6] ^= *(pSnr+i);
+	}
+	CalulateCRC(ucComMF522Buf,7,&ucComMF522Buf[7]);
+	
+	RC522ClearBitMask(Status2Reg,0x08);
+
+	status = RC522ComMF522(PCD_TRANSCEIVE,ucComMF522Buf,9,ucComMF522Buf,&unLen);
+	if((status == MI_OK) && (unLen == 0x18))
+	{
+		status = MI_OK;
+	}
+	else
+	{
+		status = MI_ERR;
+	}
+	return status;
+}
+
+/**
+ *@brief 验证卡片密码
+ *@param auto_mode:密码验证模式  0x60 = 验证A密钥
+ *								 0x61 = 验证B密钥
+ *		 addr:地址块
+ *		 pKey:密码
+ *		 pSnr:卡片序列号，4字节
+ *@return 成功：MI_OK
+ */
+char Rc522AuthState(unsigned char auto_mode,unsigned char addr,unsigned char *pKey,unsigned char *pSnr)
+{
+	char status;
+	unsigned int unLen;
+	unsigned char i,ucComMF522Buf[MAXRLEN];
+
+	ucComMF522Buf[0] = auto_mode;
+	ucComMF522Buf[1] = addr;
+
+	memcpy(&ucComMF522Buf[2], pKey, 6);
+	memcpy(&ucComMF522Buf[8], pSnr, 4);
+	
+	status = RC522ComMF522(PCD_AUTHENT,ucComMF522Buf,12,ucComMF522Buf,&unLen);
+	if((status != MI_OK) || (!(RC522Read(Status2Reg)&0x08)))
+	{
+		status = MI_ERR;
+	}
+	return status;
+}
+
+/**
+ *@brief 读取卡一块的数据
+ *@param addr:块地址
+ *       p:读出的数据,16字节
+ *@return 成功：MI_OK
+ */
+char Rc522ReadBlock(unsigned char addr ,unsigned char *p)
+{
+	char status;
+	unsigned int unLen;
+	unsigned char i,ucComMF522Buf[MAXRLEN];
+
+	ucComMF522Buf[0] = PICC_READ;
+	ucComMF522Buf[1] = addr;
+
+	CalulateCRC(ucComMF522Buf,2,&ucComMF522Buf[2]);
+
+	status = RC522ComMF522(PCD_TRANSCEIVE,ucComMF522Buf,4,ucComMF522Buf,&unLen);
+	if((status == MI_OK) && (unLen == 0x90))
+	{
+		for(i = 0;i < 16;i++)
+		{
+			*(p + i) = ucComMF522Buf[i];
+		}
+	}
+	else
+	{
+		status = MI_ERR;
+	}
+	return status;
+}
+
+/**
+ *@brief 写数据到卡的一块
+ *@param addr:块地址
+ *       p:写入的数据,16字节
+ *@return 成功：MI_OK
+ */
+char Rc522WriteBlock(unsigned char addr ,unsigned char *p)
+{
+	char status;
+	unsigned int unLen;
+	unsigned char i,ucComMF522Buf[MAXRLEN];
+
+	ucComMF522Buf[0] = PICC_WRITE;
+	ucComMF522Buf[1] = addr;
+	CalulateCRC(ucComMF522Buf,2,&ucComMF522Buf[2]);
+
+	status = RC522ComMF522(PCD_TRANSCEIVE,ucComMF522Buf,4,ucComMF522Buf,&unLen);
+	if((status != MI_OK) || (unLen != 4) || (ucComMF522Buf[0] & 0x0F) != 0x0A)
+	{
+		status = MI_ERR;
+	}
+
+	if(status == MI_OK)
+	{
+		for(i = 0;i < 16;i++)
+		{
+			ucComMF522Buf[i] = *(p + i);
+		}
+		CalulateCRC(ucComMF522Buf,16,&ucComMF522Buf[16]);
+
+		status = RC522ComMF522(PCD_TRANSCEIVE,ucComMF522Buf,18,ucComMF522Buf,&unLen);
+		if((status != MI_OK) || (unLen != 4) || (ucComMF522Buf[0] & 0x0F) != 0x0A)
+		{
+			status = MI_ERR;
+		}
+	}
+	return status;
+}
+
+/**
+ *@brief 命令卡片进入休眠状态
+ *@return 成功：MI_OK
+ */
+char Rc522Halt(void)
+{
+	unsigned char status;
+	unsigned int unLen;
+	unsigned char ucComMF522Buf[MAXRLEN];
+
+	ucComMF522Buf[0] = PICC_HALT;
+	ucComMF522Buf[1] = 0;
+	CalulateCRC(ucComMF522Buf,2,&ucComMF522Buf[2]);
+
+	status = RC522ComMF522(PCD_TRANSCEIVE,ucComMF522Buf,4,ucComMF522Buf,&unLen);
+
+	return MI_OK;
 }
 
 /**
