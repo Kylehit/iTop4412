@@ -16,19 +16,19 @@ int main(int argc,char **argv)
 {
 	unsigned char UID[5], Temp[4];
 	unsigned char WriteBuff[16],ReadBuff[16];
-	unsigned char Key[6] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};
+	unsigned char Key[6] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF};		
 	unsigned long num = 0;
 	int i;
 	int ret;
 	int rc522_handle;
-	ret = OpenRc522Dev();
+	ret = OpenRc522Dev();				//打开设备
 	if(ret != 0)
 	{
 		printf("Open Rc522 Dev Error\n");
 		return -1;
 	}
 
-	ret = Rc522Init();
+	ret = Rc522Init();					//Rc522模块初始化
 	if(ret != 0)
 	{
 		printf("Rc522 Init Error\n");
@@ -81,7 +81,6 @@ int main(int argc,char **argv)
 						{
 							printf("Rc522AuthState ok\n");
 						}
-#if 1
 						memcpy(WriteBuff,"hellohellohello",16);
 
 						if(Rc522WriteBlock(1,WriteBuff) != MI_OK)				//向块中写入数据
@@ -98,10 +97,10 @@ int main(int argc,char **argv)
 							printf("Rc522ReadBlock ok\n");
 							printf("Read Str:%s\n",ReadBuff);
 						}
-#endif
+						
 						Rc522Request(0x52,Temp);//clear
 
-						Rc522Halt();
+						Rc522Halt();											//命令卡片进入休眠模式
 						break;			//跳出继续找卡
 					}
 					else
