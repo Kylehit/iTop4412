@@ -55,9 +55,9 @@ int main(int argc,char **argv)
 
 	memset(lcd_buf,0,len);
 
-	LcdDrawLine(0,0,480,272,0xFF);
-	LcdDrawLine(0,272,480,0,0xFF00);
-	LcdDrawLine(0,100,480,100,0xFF0000);
+	LcdDrawLine(0,0,480,272,0xFF);			//蓝色
+	LcdDrawLine(0,272,480,0,0xFF00);		//绿色
+	LcdDrawLine(0,100,480,100,0xFF0000);	//红色
 
 	//关闭
 	LcdClose();
