@@ -26,21 +26,31 @@ int main(int argc,char *argv)
 		printf("UartInit error\n");
 		return -1;
 	}
-	
+
 	recv_data = malloc(1024);
 	if(recv_data == NULL)
 	{
 		printf("malloc memory error\n");
 		return -1;
 	}
+	char AT_cmd[] = {'A','T','\r','\n'};
 	while(1)
 	{
-		ret = UartRecvData(recv_data,10);
+#if 0
+		ret = UartRecvData(recv_data,10,50);
 		if(ret > 0)
 		{
-			printf("recv data\n");
 			UartSendData(recv_data,ret);
 		}
+#else
+		UartSendData(AT_cmd,sizeof(AT_cmd));
+		ret = UartRecvData(recv_data,100,50);
+		if(ret > 0)
+		{
+			printf("recv:%s\n",recv_data);
+		}
+		sleep(1);
+#endif
 	}
 	return 0;
 }
