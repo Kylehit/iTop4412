@@ -21,19 +21,17 @@ int Esp8266Init(void);
  *@brief Esp8266模块发送密令
  *@param cmd:发送的密令字符串
  *@param ack:期待的应答结果，为空，则表示不需要等待应答
- *@param waittime:等待时间，ms
  *@return 成功：0	失败：-1
  */
-int Esp8266SendCmd(const char *cmd,const char *ack,const unsigned short waittime);
+int Esp8266SendCmd(const char *cmd,const char *ack);
 
 /**
  *@brief Esp8266模块发送数据
  *@param cmd:发送的数据字符串,此时不需要添加回车
  *@param ack:期待的应答结果，为空，则表示不需要等待应答
- *@param waittime:等待时间，ms
  *@return 成功：0	失败：-1
  */
-int Esp8266SendData(const char *data,const char *ack,const unsigned short waittime);
+int Esp8266SendData(const char *data,const char *ack);
 
 /**
  *@brief Esp8266模块重启

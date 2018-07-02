@@ -25,10 +25,10 @@ int UartSendData(const char *data,int len);
 
 /**
  *@brief 串口接收数据
- *@param data:接收数据存放的空间  len:需要接收的数据长度 timeout:超时时间(ms)
+ *@param data:接收数据存放的空间  len:需要接收的数据长度
  *@return 返回实际接收到的数据长度
  */
-int UartRecvData(char *data,int len,const unsigned int timeout);
+int UartRecvData(char *data,int len);
 
 /**
  *@brief 串口关闭

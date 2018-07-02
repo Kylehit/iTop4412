@@ -14,7 +14,7 @@
 #include "../uart/uart.h"
 #include "esp8266.h"
 
-#define RECVBUFSIZE		100
+#define RECVBUFSIZE		1024
 #define SENDBUFSIZE		1024
 
 //定义串口接收数据存放空间
@@ -28,7 +28,7 @@ static char UartSendBuf[SENDBUFSIZE];
 int Esp8266Init(void)
 {
 	int ret = -1;
-	ret = Esp8266SendCmd("AT","OK",20);		//检测模块是否在线
+	ret = Esp8266SendCmd("AT","OK");		//检测模块是否在线
 	return ret;
 }
 
@@ -36,14 +36,12 @@ int Esp8266Init(void)
  *@brief Esp8266模块发送密令
  *@param cmd:发送的密令字符串
  *@param ack:期待的应答结果，为空，则表示不需要等待应答
- *@param waittime:等待时间，ms
  *@return 成功：0	失败：-1
  */
-int Esp8266SendCmd(const char *cmd,const char *ack,const unsigned short waittime)
+int Esp8266SendCmd(const char *cmd,const char *ack)
 {
 	int ret;
 	sprintf(UartSendBuf,"%s\r\n",cmd);
-	printf("Cmd:%s\n",UartSendBuf);
 	ret = UartSendData(UartSendBuf,strlen(UartSendBuf));
 	if(ret < 0)
 	{
@@ -51,7 +49,7 @@ int Esp8266SendCmd(const char *cmd,const char *ack,const unsigned short waittime
 		return -1;
 	}
 	memset(UartRecvBuf,0,RECVBUFSIZE);
-	ret = UartRecvData(UartRecvBuf,RECVBUFSIZE,waittime);
+	ret = UartRecvData(UartRecvBuf,RECVBUFSIZE);
 	if(ret < 0)
 	{
 		printf("Esp8266SendCmd RecvData error.-L:%d\n",__LINE__);
@@ -68,10 +66,9 @@ int Esp8266SendCmd(const char *cmd,const char *ack,const unsigned short waittime
  *@brief Esp8266模块发送数据
  *@param cmd:发送的数据字符串,此时不需要添加回车
  *@param ack:期待的应答结果，为空，则表示不需要等待应答
- *@param waittime:等待时间，ms
  *@return 成功：0	失败：-1
  */
-int Esp8266SendData(const char *data,const char *ack,const unsigned short waittime)
+int Esp8266SendData(const char *data,const char *ack)
 {
 	int ret = -1;
 	ret = UartSendData(data,strlen(data));
@@ -80,10 +77,10 @@ int Esp8266SendData(const char *data,const char *ack,const unsigned short waitti
 		printf("Esp8266SendData SendData error.-L:%d\n",__LINE__);
 		return -1;
 	}
-	if((ack != NULL) && waittime)			//需要对接收的数据进行比较
+	if(ack != NULL)			//需要对接收的数据进行比较
 	{
 		memset(UartRecvBuf,0,RECVBUFSIZE);
-		ret = UartRecvData(UartRecvBuf,RECVBUFSIZE,waittime);
+		ret = UartRecvData(UartRecvBuf,RECVBUFSIZE);
 		if(ret < 0)
 		{
 			printf("Esp8266SendData RecvData error.-L:%d\n",__LINE__);
@@ -106,7 +103,7 @@ int Esp8266SendData(const char *data,const char *ack,const unsigned short waitti
 int Esp8266Reseat(void)
 {
 	int ret = -1;
-	ret = Esp8266SendCmd("AT+RST","OK",20);
+	ret = Esp8266SendCmd("AT+RST","OK");
 	if(ret == 0)
 	{
 		return 0;
@@ -126,7 +123,7 @@ int Esp8266Reseat(void)
 int Esp8266VersionInfo(char *info)
 {
 	int ret = -1;
-	ret = Esp8266SendCmd("AT+GMR","OK",1000);
+	ret = Esp8266SendCmd("AT+GMR","OK");
 	if(ret == 0)
 	{
 		strncpy(info,UartRecvBuf,strlen(UartRecvBuf));

@@ -37,14 +37,14 @@ int main(int argc,char *argv)
 	while(1)
 	{
 #if 0
-		ret = UartRecvData(recv_data,10,50);
+		ret = UartRecvData(recv_data,10);
 		if(ret > 0)
 		{
 			UartSendData(recv_data,ret);
 		}
 #else
 		UartSendData(AT_cmd,sizeof(AT_cmd));
-		ret = UartRecvData(recv_data,100,50);
+		ret = UartRecvData(recv_data,100);
 		if(ret > 0)
 		{
 			printf("recv:%s\n",recv_data);

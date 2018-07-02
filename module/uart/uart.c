@@ -123,7 +123,7 @@ static int set_opt(int fd,int nSpeed, int nBits, char nEvent, int nStop)
 int UartInit(const char *devname,int nSpeed,int nBits,char nEvent,int nStop)
 {
 	int ret;
-	g_uart_fd = open(devname,O_RDWR|O_NOCTTY|O_NDELAY);
+	g_uart_fd = open(devname,O_RDWR|O_NOCTTY);
 	if(g_uart_fd < 0)
 	{
 		printf("open %s is failed\n",devname);
@@ -161,21 +161,23 @@ int UartSendData(const char *data,int len)
 
 /**
  *@brief 串口接收数据
- *@param data:接收数据存放的空间  len:需要接收的数据长度 timeout:超时时间
+ *@param data:接收数据存放的空间  len:需要接收的数据长度
  *@return 返回实际接收到的数据长度
  */
-int UartRecvData(char *data,int len,const unsigned int timeout)
+int UartRecvData(char *data,int len)
 {
 	int read_len = 0;
 	int fs_sel;
 	fd_set fs_read;
-	struct timeval tv_timeout;
+	struct timeval time;
+	
+	FD_ZERO(&fs_read);
+	FD_SET(g_uart_fd,&fs_read);
 
-	FD_ZERO(&fs_read);				//清除文件描述符集合
-	FD_SET(g_uart_fd,&fs_read);		//将fd加入到fs_read文件描述符，以待下面的select方法监听
-	tv_timeout.tv_sec = timeout;	//超时时间,ms
-	tv_timeout.tv_usec = 0;
-	fs_sel = select(g_uart_fd+1,&fs_read,NULL,NULL,&tv_timeout);
+	time.tv_sec = 10;
+	time.tv_usec = 0;
+
+	fs_sel = select(g_uart_fd+1,&fs_read,NULL,NULL,&time);
 	if(fs_sel)
 	{
 		read_len = read(g_uart_fd,data,len);

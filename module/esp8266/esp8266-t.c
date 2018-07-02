@@ -48,7 +48,7 @@ int main(int argc,char **argv)
 				}
 				break;
 			case 'S':
-				ret = Esp8266SendCmd("AT","OK",50);
+				ret = Esp8266SendCmd("AT","OK");
 				if(ret == 0)
 				{
 					printf("Esp8266SendCmd is ok\n");
@@ -59,7 +59,7 @@ int main(int argc,char **argv)
 				}
 				break;
 			case 'D':
-				ret = Esp8266SendData("hello",NULL,0);
+				ret = Esp8266SendData("hello",NULL);
 				if(ret == 0)
 				{
 					printf("Esp8266SendData is ok\n");
