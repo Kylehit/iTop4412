@@ -11,17 +11,21 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include "bigiot.h"
 #include "../tcp/tcp.h"
 #define USETCP
 
 #ifdef USETCP
-//#include "../tcp/tcp.h"
+#include "../tcp/tcp.h"
 #else
 
 #endif
 
-//设备登录
+/**
+ *@brief 设备登录
+ *@param id:设备ID apikey:设备apikey
+ *@return 成功：0	失败：-1
+ */
 void BigiotLogin(const char *id,const char *apikey)
 {
 	char ptr1[] = "{\"M\":\"checkin\",\"ID\":\"";
@@ -53,7 +57,11 @@ void BigiotLogin(const char *id,const char *apikey)
 //发送数据
 //void BigiotSendData(const char *,const char *,const char *,...);
 
-//接收数据
+/**
+ *@brief 接收数据
+ *@param data:存放数据空间  len:读取数据的长度
+ *@return 成功：返回实际接收到的数据长度  失败：-1
+ */
 int BigiotRecvData(char *data,int len)
 {
 	int ret = 0;
@@ -66,13 +74,48 @@ int BigiotRecvData(char *data,int len)
 	return ret;
 }
 
-//查询设备或者用户是否在线
-void BigiotIsOnLine(const char *ptr,...)
+/**
+ *@brief 查询设备或者用户是否在线
+ *@param id:设备或者用户的id	type:查询类型，分为设备、用户、游客
+ *@return 无
+ */
+void BigiotIsOnLine(const char *id,enum IDTYPE type)
 {
+	char ptr1[] = "{\"M\":\"isOL\",\"ID\":[\"";
+	char ptr2[] = "\"]}\n";
+	char *ptr = malloc(100);
+	int len;
+	memcpy(ptr,ptr1,sizeof(ptr1));				//ptr1
+	len = sizeof(ptr1) - 1;
 
+	if(type == DEVICE_ID)
+	{
+		memcpy(ptr+len,"D",sizeof("D"));
+	}
+	else if(type == USER_ID)
+	{
+		memcpy(ptr+len,"U",sizeof("U"));
+	}
+	else
+	{
+		memcpy(ptr+len,"P",sizeof("P"));
+	}
+	len = len + 1;
+	memcpy((ptr+len),id,strlen(id));			//id
+	len = len + strlen(id);
+	memcpy((ptr+len),ptr2,sizeof(ptr2));		//ptr2
+	printf("cmd:%s\n",ptr);
+#ifdef USETCP
+	TcpSendData(ptr,strlen(ptr));
+#else
+#endif
 }
 
-//查询当前设备状态
+/**
+ *@brief 查询当前设备状态
+ *@param 无
+ *@return 无
+ */
 void BigiotStatus(void)
 {
 	char ptr[] = "{\"M\":\"status\"}\n";
@@ -82,7 +125,11 @@ void BigiotStatus(void)
 #endif
 }
 
-//查询服务器时间
+/**
+ *@brief 查询服务器时间
+ *@param 无
+ *@return 无
+ */
 void BigiotTime(void)
 {
 	char ptr[] = "{\"M\":\"time\",\"F\":\"Y-m-d H:i:s\"}\n";
@@ -93,7 +140,11 @@ void BigiotTime(void)
 #endif
 }
 
-//发送报警信息
+/**
+ *@brief 发送报警信息
+ *@param message:报警信息	type：报警方式
+ *@return 无
+ */
 void BigiotAlertMessage(const char *message,const char *type)
 {
 	char ptr1[] = "{\"M\":\"alert\",\"C\":\"";
@@ -121,7 +172,11 @@ void BigiotAlertMessage(const char *message,const char *type)
 
 }
 
-//设备下线
+/**
+ *@brief 设备下线
+ *@param id:设备id  apikey:设备apikey
+ *@return 无
+ */
 void BigiotLogout(const char *id,const char *apikey)
 {
 	char ptr1[] = "{\"M\":\"checkout\",\"ID\":\"";

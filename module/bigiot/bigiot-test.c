@@ -55,6 +55,9 @@ void *thread2_handler(void *arg)
 			case 'A':		//报警		//测试未通过
 				BigiotAlertMessage((const char *)"alert test",(const char *)"13568859409@163.com");
 				break;
+			case 'I':		//检查用户是否在线
+				BigiotIsOnLine("6757",USER_ID);
+				break;
 			default:
 				break;
 		}
