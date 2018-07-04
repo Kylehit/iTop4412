@@ -23,12 +23,16 @@ enum IDTYPE
 /**
  *@brief 设备登录
  *@param id:设备ID apikey:设备apikey
- *@return 成功：0	失败：-1
+ *@return 无
  */
-void BigiotLogin(const char *,const char *);
+void BigiotLogin(const char *id,const char *apikey);
 
-//发送数据
-//void BigiotSendData(const char *,const char *,const char *,...);
+/**
+ *@brief 发送数据
+ *@param id:设备id	data_id:数据接口ID	value:值
+ *@return 无
+ */
+void BigiotSendData(const char *id,const char *data_id,const char *value);
 
 /**
  *@brief 接收数据

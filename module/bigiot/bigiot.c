@@ -24,7 +24,7 @@
 /**
  *@brief 设备登录
  *@param id:设备ID apikey:设备apikey
- *@return 成功：0	失败：-1
+ *@return 无
  */
 void BigiotLogin(const char *id,const char *apikey)
 {
@@ -54,8 +54,41 @@ void BigiotLogin(const char *id,const char *apikey)
 
 }
 
-//发送数据
-//void BigiotSendData(const char *,const char *,const char *,...);
+/**
+ *@brief 发送数据
+ *@param id:设备id	data_id:数据接口ID	value:值
+ *@return 无
+ */
+void BigiotSendData(const char *id,const char *data_id,const char *value)
+{
+	char ptr1[] = "{\"M\":\"update\",\"ID\":\"";
+	char ptr2[] = "\",\"V\":{\"";
+	char ptr3[] = "\":\"";
+	char ptr4[] = "\"}}\n";
+	char *ptr = malloc(100);
+	int len,ret;
+
+	memset(ptr,0,100);
+	memcpy(ptr,ptr1,sizeof(ptr1));
+	len = sizeof(ptr1) - 1;
+	memcpy((ptr+len),id,strlen(id));
+	len += strlen(id);
+	memcpy((ptr+len),ptr2,sizeof(ptr2));
+	len += sizeof(ptr2) - 1;
+	memcpy((ptr+len),data_id,strlen(data_id));
+	len += strlen(data_id);
+	memcpy((ptr+len),ptr3,sizeof(ptr3));
+	len += sizeof(ptr3) - 1;
+	memcpy((ptr+len),value,strlen(value));
+	len += strlen(value);
+	memcpy((ptr+len),ptr4,sizeof(ptr4));
+	len = strlen(ptr);
+#ifdef USETCP
+	ret = TcpSendData(ptr,len);
+#else
+
+#endif
+}
 
 /**
  *@brief 接收数据

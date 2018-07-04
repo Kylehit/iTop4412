@@ -30,10 +30,13 @@ void *thread1_handler(void *arg)
 	}
 }
 
+#define random(a,b)	((rand()%(b-a+1))+a)
+
 void *thread2_handler(void *arg)
 {
 	printf("pthread2 handler function!\n");
 	char c;
+	char data[10];
 	while(1)
 	{
 		c = getchar();
@@ -55,8 +58,17 @@ void *thread2_handler(void *arg)
 			case 'A':		//报警		//测试未通过
 				BigiotAlertMessage((const char *)"alert test",(const char *)"13568859409@163.com");
 				break;
-			case 'I':		//检查用户是否在线
-				BigiotIsOnLine("6757",USER_ID);
+			case 'I':		//检训设备是否在线
+				BigiotIsOnLine("6757",DEVICE_ID);
+				break;
+			case 'E':		//发送数据值终端
+				while(1)
+				{
+					sprintf(data,"%d",random(20,90));
+					BigiotSendData("6757","6033",data);
+					//BigiotSendData("6757","6033","35.3");
+					sleep(6);
+				}
 				break;
 			default:
 				break;
