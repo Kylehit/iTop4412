@@ -11,6 +11,14 @@
 #ifndef _ESP8266_H
 #define _ESP8266_H
 
+enum WIFIMODE
+{
+	WIFI_STATION = 1,
+	WIFI_AP,
+	WIFI_AP_STATION
+};
+
+
 /**
  *@brief Esp8266模块初始化
  *@return 成功：0	失败：-1
@@ -40,14 +48,47 @@ int Esp8266SendData(const char *data,const char *ack);
 int Esp8266Reseat(void);
 
 /**
- *@brief Esp8266版本信息
- *@param info:版本信息
+ *@brief Esp8266模块应用模式
+ *@param mode：wifi模式参数
  *@return 成功：0	失败：-1
- *@note 只有当成功调用时，info信息才有效
  */
-int Esp8266VersionInfo(char *info);
+int Esp8266SetMode(enum WIFIMODE mode);
+
+/**
+ *@brief Esp8266模块设置路由器
+ *@param ssid:路由器名	password:密码
+ *@return 成功：0	失败：-1
+ */
+int Esp8266SetRouter(const char *ssid,const char *password);
+
+/**
+ *@brief Esp8266模块IP获取
+ *@param 存放IP地址
+ *@return 成功：0	失败：-1
+ */
+int Esp8266GetIPAddr(char *ip);
+
+/**
+ *@brief Esp8266模块连接到服务器
+ *@param type:通信协议类型	ip:服务器ip地址	port服务器端口
+ *@return 成功：0	失败：-1
+ */
+int  Esp8266ConnectServer(const char *type,const char *ip,const unsigned int port);
 
 
+/**
+ *@brief Esp8266模块设置开启透传模式
+ *@param 无
+ *@return 成功：0	失败：-1
+ */
+int Esp8266SetTransMode(void);
+
+/**
+ *@brief Esp8266模块开始透传
+ *@param 无
+ *@return 成功：0	失败：-1
+ */
+int Esp8266StartTransmission(void);
 
 #endif  /* _ESP8266_H */
 

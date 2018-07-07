@@ -24,6 +24,7 @@ static char UartSendBuf[SENDBUFSIZE];
 
 /**
  *@brief Esp8266模块初始化
+ *@param 成功：0	失败：-1
  */
 int Esp8266Init(void)
 {
@@ -55,6 +56,7 @@ int Esp8266SendCmd(const char *cmd,const char *ack)
 		printf("Esp8266SendCmd RecvData error.-L:%d\n",__LINE__);
 		return -1;
 	}
+	printf("recv data:%s\n",UartRecvBuf);
 	if(strstr(UartRecvBuf,ack) == NULL)	//在接收到的数据中没有找到指定的ACK字符串
 	{
 		return -1;
@@ -104,34 +106,97 @@ int Esp8266Reseat(void)
 {
 	int ret = -1;
 	ret = Esp8266SendCmd("AT+RST","OK");
-	if(ret == 0)
-	{
-		return 0;
-	}
-	else
-	{
-		return -1;
-	}
+	return ret;
 }
 
 /**
- *@brief Esp8266版本信息
- *@param info:版本信息
+ *@brief Esp8266模块应用模式
+ *@param mode：wifi模式参数
  *@return 成功：0	失败：-1
- *@pote 只有当成功调用时，info信息才有效
  */
-int Esp8266VersionInfo(char *info)
+int Esp8266SetMode(enum WIFIMODE mode)
 {
 	int ret = -1;
-	ret = Esp8266SendCmd("AT+GMR","OK");
-	if(ret == 0)
-	{
-		strncpy(info,UartRecvBuf,strlen(UartRecvBuf));
-		return 0;
-	}
-	else
-	{
-		return -1;
-	}
+	sprintf(UartSendBuf,"AT+CWMODE=%d\r\n",mode);
+	ret = Esp8266SendCmd(UartSendBuf,"OK");
+	return ret;
 }
 
+/**
+ *@brief Esp8266模块设置路由器
+ *@param ssid:路由器名	password:密码
+ *@return 成功：0	失败：-1
+ */
+int Esp8266SetRouter(const char *ssid,const char *password)
+{
+	int ret = -1;
+	sprintf(UartSendBuf,"AT+CWJAP=\"%s\",\"%s\"\r\n",ssid,password);
+	ret = Esp8266SendCmd(UartSendBuf,"OK");
+	return ret;
+}
+
+/**
+ *@brief Esp8266模块IP获取
+ *@param 存放IP地址
+ *@return 成功：0	失败：-1
+ */
+int Esp8266GetIPAddr(char *ip)
+{
+	int ret = -1;
+	char *ptr,*ptr2;
+	sprintf(UartSendBuf,"AT+CIFSR\r\n");
+	ret = Esp8266SendCmd(UartSendBuf,"OK");
+	if(ret == 0)
+	{
+		ptr = strstr(UartRecvBuf,"CIFSR:STAIP");
+		if(ptr != NULL)
+		{
+			ptr += sizeof("CIFSR:STAIP");
+			ptr2 = strstr(ptr,"\n");
+			*ptr2 = '\0';				//将第一行结束换行符置为\0
+			memcpy(ip,ptr,(ptr2-ptr));
+		}
+		else							//未找到指定字符串
+		{
+			ret = -1;
+		}
+	}
+	return ret;
+}
+
+/**
+ *@brief Esp8266模块连接到服务器
+ *@param type:通信协议类型	ip:服务器ip地址	port服务器端口
+ *@return 成功：0	失败：-1
+ */
+int  Esp8266ConnectServer(const char *type,const char *ip,const unsigned int port)
+{
+	int ret = -1;
+	sprintf(UartSendBuf,"AT+CIPSTART=\"%s\",\"%s\",%d",type,ip,port);
+	ret = Esp8266SendCmd(UartSendBuf,"OK");
+	return ret;
+}
+
+/**
+ *@brief Esp8266模块设置开启透传模式
+ *@param 无
+ *@return 成功：0	失败：-1
+ */
+int Esp8266SetTransMode(void)
+{
+	int ret = -1;
+	ret = Esp8266SendCmd("AT+CIPMODE=1","OK");
+	return ret;
+}
+
+/**
+ *@brief Esp8266模块开始透传
+ *@param 无
+ *@return 成功：0	失败：-1
+ */
+int Esp8266StartTransmission(void)
+{
+	int ret = -1;
+	ret = Esp8266SendCmd("AT+CIPSEND","OK");
+	return ret;
+}
