@@ -6,7 +6,7 @@ OBJSRC= ../uart/uart.o	\
 		 esp8266-t.o
 
 all:$(OBJSRC)
-	$(CC) -o $(TARGET) $(OBJSRC)
+	$(CC) -o $(TARGET) $(OBJSRC) -lpthread
 	cp $(TARGET) /home/cc/iTop4412/busybox/system/bin
 
 $(filter %.o,$(OBJSRC)):%.o:%.c

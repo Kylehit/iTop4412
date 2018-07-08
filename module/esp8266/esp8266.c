@@ -29,7 +29,11 @@ static char UartSendBuf[SENDBUFSIZE];
 int Esp8266Init(void)
 {
 	int ret = -1;
-	ret = Esp8266SendCmd("AT","OK");		//检测模块是否在线
+	ret = Esp8266SendCmd("AT","OK");
+	if(ret < 0)
+	{
+		printf("Esp8266Init error\n");
+	}
 	return ret;
 }
 
@@ -56,9 +60,10 @@ int Esp8266SendCmd(const char *cmd,const char *ack)
 		printf("Esp8266SendCmd RecvData error.-L:%d\n",__LINE__);
 		return -1;
 	}
-	printf("recv data:%s\n",UartRecvBuf);
-	if(strstr(UartRecvBuf,ack) == NULL)	//在接收到的数据中没有找到指定的ACK字符串
+	if(strstr(UartRecvBuf,ack) == NULL)				//在接收到的数据中没有找到指定的ACK字符串
 	{
+		printf("not come here\n");
+		printf("data:%s\n",UartRecvBuf);
 		return -1;
 	}
 	return 0;
@@ -79,7 +84,7 @@ int Esp8266SendData(const char *data,const char *ack)
 		printf("Esp8266SendData SendData error.-L:%d\n",__LINE__);
 		return -1;
 	}
-	if(ack != NULL)			//需要对接收的数据进行比较
+	if(ack != NULL)										//需要对接收的数据进行比较
 	{
 		memset(UartRecvBuf,0,RECVBUFSIZE);
 		ret = UartRecvData(UartRecvBuf,RECVBUFSIZE);
@@ -117,7 +122,8 @@ int Esp8266Reseat(void)
 int Esp8266SetMode(enum WIFIMODE mode)
 {
 	int ret = -1;
-	sprintf(UartSendBuf,"AT+CWMODE=%d\r\n",mode);
+	memset(UartSendBuf,0,SENDBUFSIZE);
+	sprintf(UartSendBuf,"AT+CWMODE=%d",mode);
 	ret = Esp8266SendCmd(UartSendBuf,"OK");
 	return ret;
 }
@@ -130,7 +136,8 @@ int Esp8266SetMode(enum WIFIMODE mode)
 int Esp8266SetRouter(const char *ssid,const char *password)
 {
 	int ret = -1;
-	sprintf(UartSendBuf,"AT+CWJAP=\"%s\",\"%s\"\r\n",ssid,password);
+	memset(UartSendBuf,0,SENDBUFSIZE);
+	sprintf(UartSendBuf,"AT+CWJAP=\"%s\",\"%s\"",ssid,password);
 	ret = Esp8266SendCmd(UartSendBuf,"OK");
 	return ret;
 }
@@ -144,7 +151,8 @@ int Esp8266GetIPAddr(char *ip)
 {
 	int ret = -1;
 	char *ptr,*ptr2;
-	sprintf(UartSendBuf,"AT+CIFSR\r\n");
+	memset(UartSendBuf,0,SENDBUFSIZE);
+	sprintf(UartSendBuf,"AT+CIFSR");
 	ret = Esp8266SendCmd(UartSendBuf,"OK");
 	if(ret == 0)
 	{
@@ -152,11 +160,11 @@ int Esp8266GetIPAddr(char *ip)
 		if(ptr != NULL)
 		{
 			ptr += sizeof("CIFSR:STAIP");
-			ptr2 = strstr(ptr,"\n");
-			*ptr2 = '\0';				//将第一行结束换行符置为\0
-			memcpy(ip,ptr,(ptr2-ptr));
+			ptr2 = strstr(ptr,"+CIFSR");
+			*(ptr + (ptr2-ptr)) = '\0';				//将第一行结束换行符置为\0
+			memcpy(ip,ptr,(ptr2-ptr)-1);
 		}
-		else							//未找到指定字符串
+		else										//未找到指定字符串
 		{
 			ret = -1;
 		}
@@ -172,6 +180,7 @@ int Esp8266GetIPAddr(char *ip)
 int  Esp8266ConnectServer(const char *type,const char *ip,const unsigned int port)
 {
 	int ret = -1;
+	memset(UartSendBuf,0,SENDBUFSIZE);
 	sprintf(UartSendBuf,"AT+CIPSTART=\"%s\",\"%s\",%d",type,ip,port);
 	ret = Esp8266SendCmd(UartSendBuf,"OK");
 	return ret;
@@ -185,6 +194,7 @@ int  Esp8266ConnectServer(const char *type,const char *ip,const unsigned int por
 int Esp8266SetTransMode(void)
 {
 	int ret = -1;
+	memset(UartSendBuf,0,SENDBUFSIZE);
 	ret = Esp8266SendCmd("AT+CIPMODE=1","OK");
 	return ret;
 }
@@ -197,6 +207,7 @@ int Esp8266SetTransMode(void)
 int Esp8266StartTransmission(void)
 {
 	int ret = -1;
+	memset(UartSendBuf,0,SENDBUFSIZE);
 	ret = Esp8266SendCmd("AT+CIPSEND","OK");
 	return ret;
 }

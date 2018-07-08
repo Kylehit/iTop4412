@@ -93,6 +93,6 @@ int main(int argc,char **argv)
 		}
 #endif
 		sleep(10);
-	}
+	};
 	return 0;
 }
